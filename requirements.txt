@@ -4,10 +4,10 @@ pydub
 numpy
 matplotlib
 pysftp
-torch==2.1.0
+torch
 torchvision
 torchaudio
-transformers==4.36.2
-streamlit==1.25.0
+transformers
+streamlit<1.25.0
 librosa
 soundfile
