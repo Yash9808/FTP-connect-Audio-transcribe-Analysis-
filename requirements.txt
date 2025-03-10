@@ -6,3 +6,4 @@ pydub
 numpy
 matplotlib
 pysftp
+llvmlite==0.39.1
