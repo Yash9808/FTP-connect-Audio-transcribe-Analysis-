@@ -1,9 +1,9 @@
 streamlit
 librosa
 transformers
-torch
 pydub
 numpy
 matplotlib
 pysftp
 llvmlite==0.39.1
+torch==1.12.0
