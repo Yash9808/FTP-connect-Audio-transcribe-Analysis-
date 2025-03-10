@@ -1,5 +1,6 @@
-torch==1.13.1  # Choose a compatible PyTorch version with your Python version
+#torch==1.13.1  # Choose a compatible PyTorch version with your Python version
 llvmlite==0.39.1  # Choose an available llvmlite version that supports Python 3.10
 pysftp==0.2.9  # Make sure this is compatible with your Python version (you may need to check manually)
 transformers==4.25.0
 librosa==0.9.1
+torch==2.2.0+cpu
