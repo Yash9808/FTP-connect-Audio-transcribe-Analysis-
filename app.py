@@ -1,12 +1,13 @@
-import asyncio
 import streamlit as st
 import os
 import librosa
 import numpy as np
+import torch
 from transformers import pipeline
 from ftplib import FTP
 
-# Fix asyncio issue in Streamlit
+# Ensure asyncio compatibility in Streamlit
+import asyncio
 try:
     asyncio.get_running_loop()
 except RuntimeError:
@@ -15,12 +16,12 @@ except RuntimeError:
 # Streamlit UI
 st.title("🎵 Sentiment Analysis from FTP Audio Files")
 
-# User inputs for FTP connection
+# Sidebar - FTP Credentials
 st.sidebar.header("📡 FTP Login")
 host = st.sidebar.text_input("Host", "cph.v4one.co.uk")
 username = st.sidebar.text_input("Username", "your_username")
 password = st.sidebar.text_input("Password", type="password")
-remote_path = "/path/to/audio/folders"  # Change based on server
+remote_path = "/path/to/audio/folders"  # Update as needed
 
 # Function to list folders from FTP
 def list_ftp_folders(host, username, password):
@@ -34,7 +35,7 @@ def list_ftp_folders(host, username, password):
         st.error(f"FTP Connection Error: {e}")
         return []
 
-# Connect and List Available Folders
+# Connect & List Folders Button
 if st.sidebar.button("🔄 Connect & List Folders"):
     available_dates = list_ftp_folders(host, username, password)
     if available_dates:
@@ -73,7 +74,7 @@ if "available_dates" in st.session_state:
 
                     st.success(f"✅ Downloaded {len(audio_files)} files from {selected_date}")
 
-                    # Sentiment Analysis
+                    # Load Sentiment Analysis Model
                     sentiment_model = pipeline("sentiment-analysis")
                     results = []
 
