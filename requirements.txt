@@ -1,5 +1,8 @@
-streamlit==1.43.1
-torch==2.0.1
-transformers
+streamlit
 librosa
+transformers
+torch
+pydub
 numpy
+matplotlib
+pysftp
