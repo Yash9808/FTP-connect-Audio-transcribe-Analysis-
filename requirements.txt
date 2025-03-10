@@ -1,13 +1,5 @@
-
-
-pydub
-numpy
-matplotlib
-pysftp
-torch
-torchvision
-torchaudio
+streamlit==1.43.1
+torch==2.0.1
 transformers
-streamlit<1.25.0
 librosa
-soundfile
+numpy
