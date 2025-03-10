@@ -1,3 +1,4 @@
+streamlit
 librosa
 transformers
 pydub
@@ -5,6 +6,7 @@ numpy
 matplotlib
 pysftp
 llvmlite==0.39.1
-torch==1.12.0 
-streamlit
-
+torch  # (Remove version constraint if causing issues)
+soundfile
+torchaudio
+scipy
