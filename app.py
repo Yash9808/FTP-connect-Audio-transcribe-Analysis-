@@ -13,21 +13,22 @@ st.sidebar.header("📡 FTP Login")
 host = st.sidebar.text_input("Host", "cph.v4one.co.uk")  
 username = st.sidebar.text_input("Username", "your_username")
 password = st.sidebar.text_input("Password", type="password")
-remote_path = "/path/to/audio/folders"  # Change based on server
 
 # Connect and List Available Folders
 if st.sidebar.button("🔄 Connect & List Folders"):
     try:
-        # Connect to FTP server
         ftp = FTP(host, timeout=120)
         ftp.login(user=username, passwd=password)
 
-        # List available folders (filter date-based ones)
+        # List available folders
         folders = []
-        ftp.retrlines("LIST", lambda x: folders.append(x.split()[-1]))  # Get directory names
+        ftp.retrlines("LIST", lambda x: folders.append(x.split()[-1]))  
         available_dates = [folder for folder in folders if folder.startswith("2025")]
 
         ftp.quit()
+
+        # Debug: Print available folders
+        st.write("Available folders:", available_dates)
 
         st.session_state["available_dates"] = available_dates
         st.success("✅ Connected! Select a date below.")
@@ -42,14 +43,15 @@ if "available_dates" in st.session_state:
         try:
             ftp = FTP(host)
             ftp.login(user=username, passwd=password)
-            remote_folder = f"{remote_path}/{selected_date}"
+            
+            remote_folder = selected_date  # FIX: Removed remote_path
             ftp.cwd(remote_folder)
 
             local_folder = f"temp_audio/{selected_date}"
             os.makedirs(local_folder, exist_ok=True)
 
             audio_files = []
-            ftp.retrlines("LIST", lambda x: audio_files.append(x.split()[-1]))  # Get file names
+            ftp.retrlines("LIST", lambda x: audio_files.append(x.split()[-1]))  
 
             # Download files
             for file in audio_files:
