@@ -4,7 +4,6 @@ import librosa
 import numpy as np
 from transformers import pipeline
 from ftplib import FTP
-import asyncio
 
 # Streamlit UI
 st.title("Sentiment Analysis from FTP Audio Files 🎵")
@@ -16,73 +15,68 @@ username = st.sidebar.text_input("Username", "your_username")
 password = st.sidebar.text_input("Password", type="password")
 remote_path = "/path/to/audio/folders"  # Change based on server
 
-# Async function for handling FTP connection and file downloads
-async def connect_and_download():
-    if st.sidebar.button("🔄 Connect & List Folders"):
-        try:
-            # Connect to FTP server
-            ftp = FTP(host, timeout=120)
-            ftp.login(user=username, passwd=password)
+# Connect and List Available Folders
+if st.sidebar.button("🔄 Connect & List Folders"):
+    try:
+        # Connect to FTP server
+        ftp = FTP(host, timeout=120)
+        ftp.login(user=username, passwd=password)
 
-            # List available folders (filter date-based ones)
-            folders = []
-            ftp.retrlines("LIST", lambda x: folders.append(x.split()[-1]))  # Get directory names
-            available_dates = [folder for folder in folders if folder.startswith("2025")]
+        # List available folders (filter date-based ones)
+        folders = []
+        ftp.retrlines("LIST", lambda x: folders.append(x.split()[-1]))  # Get directory names
+        available_dates = [folder for folder in folders if folder.startswith("2025")]
+
+        ftp.quit()
+
+        st.session_state["available_dates"] = available_dates
+        st.success("✅ Connected! Select a date below.")
+    except Exception as e:
+        st.error(f"Connection failed: {e}")
+
+# Dropdown for Date Selection
+if "available_dates" in st.session_state:
+    selected_date = st.selectbox("📅 Select a Date", st.session_state["available_dates"])
+
+    if st.button("📥 Download & Analyze"):
+        try:
+            ftp = FTP(host)
+            ftp.login(user=username, passwd=password)
+            remote_folder = f"{remote_path}/{selected_date}"
+            ftp.cwd(remote_folder)
+
+            local_folder = f"temp_audio/{selected_date}"
+            os.makedirs(local_folder, exist_ok=True)
+
+            audio_files = []
+            ftp.retrlines("LIST", lambda x: audio_files.append(x.split()[-1]))  # Get file names
+
+            # Download files
+            for file in audio_files:
+                local_file_path = os.path.join(local_folder, file)
+                with open(local_file_path, "wb") as f:
+                    ftp.retrbinary(f"RETR {file}", f.write)
 
             ftp.quit()
+            st.success(f"✅ Downloaded {len(audio_files)} files from {selected_date}")
 
-            st.session_state["available_dates"] = available_dates
-            st.success("✅ Connected! Select a date below.")
+            # Sentiment Analysis
+            sentiment_model = pipeline("sentiment-analysis")
+            results = []
+
+            for file in os.listdir(local_folder):
+                file_path = os.path.join(local_folder, file)
+                y, sr = librosa.load(file_path, sr=16000)
+                mfccs = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13), axis=1)
+
+                # Mock transcription (Replace with real ASR model)
+                text = "This is a sample transcription"
+                sentiment = sentiment_model(text)
+
+                results.append({"File": file, "Sentiment": sentiment[0]["label"], "Confidence": sentiment[0]["score"]})
+
+            st.write("### Sentiment Analysis Results")
+            st.table(results)
+
         except Exception as e:
-            st.error(f"Connection failed: {e}")
-
-    # Dropdown for Date Selection
-    if "available_dates" in st.session_state:
-        selected_date = st.selectbox("📅 Select a Date", st.session_state["available_dates"])
-
-        if st.button("📥 Download & Analyze"):
-            try:
-                ftp = FTP(host)
-                ftp.login(user=username, passwd=password)
-                remote_folder = f"{remote_path}/{selected_date}"
-                ftp.cwd(remote_folder)
-
-                local_folder = f"temp_audio/{selected_date}"
-                os.makedirs(local_folder, exist_ok=True)
-
-                audio_files = []
-                ftp.retrlines("LIST", lambda x: audio_files.append(x.split()[-1]))  # Get file names
-
-                # Download files
-                for file in audio_files:
-                    local_file_path = os.path.join(local_folder, file)
-                    with open(local_file_path, "wb") as f:
-                        ftp.retrbinary(f"RETR {file}", f.write)
-
-                ftp.quit()
-                st.success(f"✅ Downloaded {len(audio_files)} files from {selected_date}")
-
-                # Sentiment Analysis
-                sentiment_model = pipeline("sentiment-analysis")
-                results = []
-
-                for file in os.listdir(local_folder):
-                    file_path = os.path.join(local_folder, file)
-                    y, sr = librosa.load(file_path, sr=16000)
-                    mfccs = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13), axis=1)
-
-                    # Mock transcription (Replace with real ASR model)
-                    text = "This is a sample transcription"
-                    sentiment = sentiment_model(text)
-
-                    results.append({"File": file, "Sentiment": sentiment[0]["label"], "Confidence": sentiment[0]["score"]})
-
-                st.write("### Sentiment Analysis Results")
-                st.table(results)
-
-            except Exception as e:
-                st.error(f"Download failed: {e}")
-
-# Ensure asyncio loop is running
-if __name__ == "__main__":
-    asyncio.run(connect_and_download())
+            st.error(f"Download failed: {e}")
